@@ -1,187 +1,257 @@
 import json
-from flask import Flask, request, redirect, url_for
+from flask import Flask, request, redirect, url_for, flash, get_flashed_messages
 from datetime import datetime
 
 app = Flask(__name__)
+app.secret_key = "supersecretkey"  # Needed for flash messages
 
 # File to store messages
-MESSAGES_FILE = 'messages.json'
+MESSAGES_FILE = "messages.json"
+
 
 # Function to load messages from file
 def load_messages():
     try:
-        with open(MESSAGES_FILE, 'r') as f:
+        with open(MESSAGES_FILE, "r") as f:
             return json.load(f)
     except FileNotFoundError:
         return []  # Return an empty list if file doesn't exist
 
+
 # Function to save messages to file
 def save_messages(messages):
-    with open(MESSAGES_FILE, 'w') as f:
-        json.dump(messages, f)
+    # Pretty print JSON for easier readability
+    with open(MESSAGES_FILE, "w") as f:
+        json.dump(messages, f, indent=4)
+
 
 # Initialize messages
 messages = load_messages()
 
-@app.route('/', methods=['GET', 'POST'])
-def form():
-    success_message = request.args.get('success', '')  # Check for success message in query parameters
 
-    if request.method == 'POST':
+@app.route("/", methods=["GET", "POST"])
+def form():
+    # Get any flashed messages
+    success_message = get_flashed_messages()
+
+    if request.method == "POST":
         # Collect form data
-        name = request.form['name']
-        message = request.form['message']
-        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        name = request.form["name"]
+        message = request.form["message"]
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         # Save the message
-        new_message = {'name': name, 'message': message, 'time': timestamp}
+        new_message = {"name": name, "message": message, "time": timestamp}
         messages.insert(0, new_message)
         save_messages(messages)  # Save messages to file
 
-        # Redirect to the form with a success message
-        return redirect(url_for('form', success='Message sent successfully!'))
+        # Persist success message
+        flash("Message sent successfully!")
+        return redirect(url_for("form"))  # Redirect to clear POST request
 
-    return f'''
+    # HTML with character limit feedback only for the message field
+    return f"""
     <html>
     <head>
         <style>
             body {{
                 font-family: Arial, sans-serif;
-                font-size: 14pt;
+                font-size: 14px;
                 color: black;
                 background-color: white;
                 margin: 0;
                 padding: 0;
                 display: flex;
+                flex-direction: column;
                 justify-content: center;
                 align-items: center;
-                height: 100vh;
+                min-height: 100vh;
+                box-sizing: border-box;
             }}
-            .form-container {{
-                width: 90%;
-                max-width: 400px;
+            h1 {{
+                font-size: 33px;
+                font-weight: 400;
+                margin-bottom: 24px;
+            }}
+            form {{
+                width: 100%;
+                max-width: 500px;
                 display: flex;
                 flex-direction: column;
-                gap: 1rem;
-                padding: 1.5rem;
-                border: 1px solid #ccc;
-                border-radius: 10px;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                background-color: white;
+                gap: 8px;
+                margin-bottom: 16px;
             }}
-            .form-container input,
-            .form-container textarea {{
+            input, textarea {{
                 font-family: Arial, sans-serif;
-                font-size: 14pt;
-                padding: 0.75rem;
+                font-size: 14px;
+                padding: 12px;
                 border: 1px solid #ccc;
                 border-radius: 5px;
                 width: 100%;
                 box-sizing: border-box;
             }}
-            .form-container button {{
+            button {{
                 font-family: Arial, sans-serif;
-                font-size: 14pt;
-                padding: 0.75rem;
+                font-size: 14px;
+                padding: 12px;
                 border: none;
                 border-radius: 5px;
-                background-color: #007BFF;
+                background-color: black;
                 color: white;
                 cursor: pointer;
+                width: 100%;
+                margin-top: 16px;
             }}
-            .form-container button:hover {{
-                background-color: #0056b3;
+            button:hover {{
+                background-color: #333;
             }}
             .success-message {{
-                color: green;
-                font-size: 12pt;
-                margin-top: 10px;
+                font-family: Arial, sans-serif;
+                font-size: 14px;
+                color: black;
+                margin-top: 16px;
                 text-align: center;
             }}
+            .success-message a {{
+                color: blue;
+                text-decoration: underline;
+                cursor: pointer;
+            }}
+            .char-count {{
+                font-size: 12px;
+                color: gray;
+                margin-top: -10px;
+                text-align: right;
+            }}
         </style>
+        <script>
+            function updateCharCount(field, countField, maxLength) {{
+                const remaining = maxLength - field.value.length;
+                document.getElementById(countField).textContent = remaining + " characters remaining";
+            }}
+        </script>
     </head>
     <body>
-        <div class="form-container">
-            <form action="/" method="post">
-                <input type="text" name="name" maxlength="24" placeholder="Your name" required>
-                <textarea name="message" maxlength="280" placeholder="Enter your message..." required></textarea>
-                <button type="submit">Submit</button>
-            </form>
-            <p class="success-message">{success_message}</p>
-        </div>
+        <h1>Echo-o-o-o-o</h1>
+        <form action="/" method="post">
+            <input 
+                type="text" 
+                name="name" 
+                maxlength="24" 
+                placeholder="Your name" 
+                required
+            >
+            
+            <textarea 
+                name="message" 
+                maxlength="280" 
+                placeholder="Enter your message..." 
+                required 
+                oninput="updateCharCount(this, 'message-count', 280)"
+            ></textarea>
+            <p class="char-count" id="message-count">280 characters remaining</p>
+            
+            <button type="submit">Send</button>
+        </form>
+        {'<p class="success-message">' + success_message[0] + ' <a href="/">Close</a></p>' if success_message else ''}
     </body>
     </html>
-    '''
+    """
 
-@app.route('/view/<int:index>')
+
+@app.route("/view/<int:index>")
 def view_message(index):
     total_messages = len(messages)
 
     if total_messages == 0:
-        return '<h1>No messages available</h1>'
+        return """
+        <html>
+        <body style="text-align: center; font-family: Arial;">
+        <div class="message">No messages available<br>
+        <a href="/">Go back to the form</a></div>
+        </body>
+        </html>
+        """
 
     # Ensure index is within bounds
     index = max(0, min(index, total_messages - 1))
 
     msg = messages[index]
-    return f'''
+    return f"""
     <html>
     <head>
-        <style>
-            body {{
-                font-family: Arial, sans-serif;
-                margin: 0;
-                padding: 15px;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
-                background-color: #f5f5f5;
-                text-align: center;
-            }}
-            .message-container {{
-                padding: 20px;
-                border: 1px solid #ccc;
-                border-radius: 10px;
-                max-width: 600px;
-                background-color: white;
-                text-align: left;
-            }}
-            .controls {{
-                margin-top: 10px;
-                display: flex;
-                justify-content: space-between;
-                width: 100%;
-                max-width: 600px;
-            }}
-            button {{
-                font-size: 14pt;
-                padding: 10px 20px;
-                border: 1px solid #ccc;
-                background-color: white;
-                border-radius: 5px;
-                cursor: pointer;
-            }}
-            button:hover {{
-                background-color: #e9e9e9;
-            }}
-        </style>
-    </head>
-    <body>
-        <div class="message-container">
-            <p><b>{msg['name']}</b> | {msg['time']}</p>
-            <p>{msg['message']}</p>
-        </div>
-        <div class="controls">
-            <a href="/view/{max(0, index - 1)}"><button>Previous</button></a>
-            <a href="/view/{min(total_messages - 1, index + 1)}"><button>Next</button></a>
-        </div>
-    </body>
-    </html>
-    '''
+    <style>
+        body {{
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden; /* Prevent scrollbars */
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+        }}
+        .message {{
+            font-size: 5vw; /* Adjust font size relative to viewport width */
+            text-align: center;
+            margin: 0;
+            word-wrap: break-word;
+            white-space: normal;
+            flex: 1; /* Allow it to grow and take up most of the space */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+        .info, .controls, form {{
+            margin: 10px 0;
+        }}
+        .controls a, .delete-btn {{
+            font-size: 14px;
+            padding: 10px;
+            margin: 5px;
+            text-decoration: none;
+        }}
+        .info {{
+            font-size: 14px;
+            text-align: center;
+        }}
+        p {{
+            margin: 0;
+        }}
+        .delete-btn {{
+            background-color: red;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            padding: 8px 16px;
+        }}
+    </style>
+</head>
+<body>
+    <p>{index + 1} / {total_messages}</p>
+    <p class="message">{msg['message']}</p>
+    <div class="info">
+        <span><b>{msg['name']}</b><br>{msg['time']}<br>
+        <a href="/view/{index}">Refresh</a></span>
+    </div>
+    <div class="controls">
+        <a href="/view/{max(0, index - 1)}">Previous</a>
+        <a href="/view/{min(total_messages - 1, index + 1)}">Next</a>
+    </div>
+    <form action="/delete/{index}" method="post">
+        <button type="submit" class="delete-btn">Delete</button>
+    </form>
+</body>
 
-@app.route('/delete/<int:index>', methods=['POST'])
+    </html>
+    """
+
+
+@app.route("/delete/<int:index>", methods=["POST"])
 def delete_message(index):
     try:
         # Remove the specific message
@@ -189,7 +259,8 @@ def delete_message(index):
         save_messages(messages)  # Save updated messages to file
     except IndexError:
         pass  # Ignore if the index is out of range
-    return redirect(url_for('view_message', index=max(0, index - 1)))
+    return redirect(url_for("view_message", index=max(0, index - 1)))
 
-if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=5000, debug=True)
+
+if __name__ == "__main__":
+    app.run(host="127.0.0.1", port=5000, debug=True)
