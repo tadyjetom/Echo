@@ -42,12 +42,75 @@ def form():
         return redirect(url_for('form', success='Message sent successfully!'))
 
     return f'''
-    <form action="/" method="post">
-        <input type="text" name="name" maxlength="24" placeholder="Your name" required><br>
-        <textarea name="message" maxlength="280" placeholder="Enter your message..." required></textarea><br>
-        <button type="submit">Submit</button>
-    </form>
-    <p>{success_message}</p>
+    <html>
+    <head>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                font-size: 14pt;
+                color: black;
+                background-color: white;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+            }}
+            .form-container {{
+                width: 90%;
+                max-width: 400px;
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1.5rem;
+                border: 1px solid #ccc;
+                border-radius: 10px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                background-color: white;
+            }}
+            .form-container input,
+            .form-container textarea {{
+                font-family: Arial, sans-serif;
+                font-size: 14pt;
+                padding: 0.75rem;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                width: 100%;
+                box-sizing: border-box;
+            }}
+            .form-container button {{
+                font-family: Arial, sans-serif;
+                font-size: 14pt;
+                padding: 0.75rem;
+                border: none;
+                border-radius: 5px;
+                background-color: #007BFF;
+                color: white;
+                cursor: pointer;
+            }}
+            .form-container button:hover {{
+                background-color: #0056b3;
+            }}
+            .success-message {{
+                color: green;
+                font-size: 12pt;
+                margin-top: 10px;
+                text-align: center;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="form-container">
+            <form action="/" method="post">
+                <input type="text" name="name" maxlength="24" placeholder="Your name" required>
+                <textarea name="message" maxlength="280" placeholder="Enter your message..." required></textarea>
+                <button type="submit">Submit</button>
+            </form>
+            <p class="success-message">{success_message}</p>
+        </div>
+    </body>
+    </html>
     '''
 
 @app.route('/view/<int:index>')
@@ -68,62 +131,37 @@ def view_message(index):
             body {{
                 font-family: Arial, sans-serif;
                 margin: 0;
-                padding: 15px;  /* Padding for the content */
+                padding: 15px;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
                 height: 100vh;
-                width: 100vw;
                 background-color: #f5f5f5;
                 text-align: center;
-                overflow: hidden;  /* Prevent scrollbars */
-                box-sizing: border-box;
             }}
-            .message {{
-                flex: 1;
-                display: flex;
-                justify-content: center;
-                align-items: center;
+            .message-container {{
                 padding: 20px;
-                font-size: calc(2vh + 2vw);
-                overflow-wrap: break-word;
-                word-wrap: break-word;
-                max-width: 80%;
-                max-height: 60%;  /* Ensure the message doesn’t exceed available space */
+                border: 1px solid #ccc;
+                border-radius: 10px;
+                max-width: 600px;
+                background-color: white;
+                text-align: left;
             }}
             .controls {{
+                margin-top: 10px;
                 display: flex;
                 justify-content: space-between;
                 width: 100%;
-                padding: 10px 20px;
-                gap: 20px;
-            }}
-            .info {{
-                margin-top: 10px;
-                font-size: 14px;
-                color: #555;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 15px;
-            }}
-            .delete {{
-                color: red;
-                cursor: pointer;
-            }}
-            .refresh {{
-                color: blue;
-                text-decoration: underline;
-                cursor: pointer;
+                max-width: 600px;
             }}
             button {{
-                font-size: 16px;
-                padding: 8px 16px;
-                cursor: pointer;
+                font-size: 14pt;
+                padding: 10px 20px;
                 border: 1px solid #ccc;
                 background-color: white;
                 border-radius: 5px;
+                cursor: pointer;
             }}
             button:hover {{
                 background-color: #e9e9e9;
@@ -131,22 +169,13 @@ def view_message(index):
         </style>
     </head>
     <body>
+        <div class="message-container">
+            <p><b>{msg['name']}</b> | {msg['time']}</p>
+            <p>{msg['message']}</p>
+        </div>
         <div class="controls">
             <a href="/view/{max(0, index - 1)}"><button>Previous</button></a>
-            <span>{index + 1} / {total_messages}</span>
             <a href="/view/{min(total_messages - 1, index + 1)}"><button>Next</button></a>
-        </div>
-        <div class="message">
-            {msg['message']}
-        </div>
-        <div class="controls">
-            <div class="info">
-                <span><b>{msg['name']}</b> | {msg['time']}</span>
-                <a class="refresh" href="/view/{index}">Refresh</a>
-            </div>
-            <form action="/delete/{index}" method="post" style="display:inline;">
-                <button class="delete" type="submit">Delete</button>
-            </form>
         </div>
     </body>
     </html>
