@@ -86,7 +86,7 @@ def form():
                 font-size: 14px;
                 padding: 12px;
                 border: 1px solid #ccc;
-                border-radius: 5px;
+                border-radius: 8px;
                 width: 100%;
                 box-sizing: border-box;
             }}
@@ -95,7 +95,7 @@ def form():
                 font-size: 14px;
                 padding: 12px;
                 border: none;
-                border-radius: 5px;
+                border-radius: 8px;
                 background-color: black;
                 color: white;
                 cursor: pointer;
@@ -195,7 +195,7 @@ def view_message(index):
             font-size: 14px;
         }}
         .message {{
-            font-size: 5vw; /* Adjust font size relative to viewport width */
+            font-size: 4vw; /* Adjust font size relative to viewport width */
             text-align: center;
             margin: 0;
             word-wrap: break-word;
@@ -220,15 +220,41 @@ def view_message(index):
         }}
         p {{
             margin: 0;
+            padding: 10px 0px 10px 0px;
         }}
         .delete-btn {{
-            background-color: red;
+            background-color: black;
             color: white;
             border: none;
             cursor: pointer;
-            border-radius: 5px;
+            border-radius: 8px;
             padding: 8px 16px;
         }}
+        @media (max-width: 768px) {{
+                body {{
+                    justify-content: flex-start;
+                    align-items: stretch;
+                    padding: 10px;
+                    height: auto;
+                }}
+                .info {{
+                font-size: 14px;
+                text-align: center;
+                }}
+                p {{
+                font-size: 14px;
+                text-align: center;
+                margin: 0;
+                }}
+                .message {{
+                    font-size: 5vw; /* Smaller size for mobile */
+                    width: 100%;
+                }}
+                .controls {{
+                    flex-direction: column;
+                    gap: 10px;
+                }}
+            }}
     </style>
 </head>
 <body>
